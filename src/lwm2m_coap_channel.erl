@@ -112,7 +112,7 @@ handle_cast({send_response, Message, Receiver}, State) ->
 handle_cast(shutdown, State) ->
     {stop, normal, State};
 handle_cast(Request, State) ->
-    error_logger:warning_msg("coap_channel unknown cast ~p~n", [Request]),
+    logger:warning("coap_channel unknown cast ~p~n", [Request]),
     {noreply, State, hibernate}.
 
 handle_info({datagram, _SockPid, Data}, State) ->
@@ -134,21 +134,21 @@ handle_info({request_complete, #coap_message{token=Token, id=Id}},
     {noreply, State#state{tokens=Tokens2, msgid_token=MsgidToToken2}, hibernate};
 
 handle_info({'EXIT', Resp, Reason}, State = #state{responder = Resp}) ->
-    error_logger:info_msg("channel received exit from responder: ~p, reason: ~p", [Resp, Reason]),
+    logger:info("channel received exit from responder: ~p, reason: ~p", [Resp, Reason]),
     {stop, Reason, State};
 handle_info({'EXIT', _Pid, _Reason}, State = #state{}) ->
-    error_logger:error_msg("channel received exit from stranger: ~p, reason: ~p", [_Pid, _Reason]),
+    logger:error("channel received exit from stranger: ~p, reason: ~p", [_Pid, _Reason]),
     {noreply, State, hibernate};
 
 handle_info(Info, State) ->
-    error_logger:warning_msg("unexpected massage ~p~n", [Info]),
+    logger:warning("unexpected massage ~p~n", [Info]),
     {noreply, State, hibernate}.
 
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
 terminate(Reason, #state{chid=ChId}) ->
-    error_logger:info_msg("channel ~p finished, reason: ~p", [ChId, Reason]),
+    logger:info("channel ~p finished, reason: ~p", [ChId, Reason]),
     ok.
 
 %%--------------------------------------------------------------------
@@ -286,7 +286,7 @@ init_transport(TrId, Receiver, #state{sock=Sock, chid=ChId}) ->
 %%--------------------------------------------------------------------
 
 send_reset(Socket, ChId, MsgId, ErrorMsg) ->
-    error_logger:error_msg("<- reset, error: ~p", [ErrorMsg]),
+    logger:error("<- reset, error: ~p", [ErrorMsg]),
     esockd_send(Socket, ChId, lwm2m_coap_message_parser:encode(#coap_message{type=reset, id=MsgId})).
 
 first_mid() ->

@@ -325,7 +325,7 @@ invoke_callback(Module, Fun, CallbackArgs, Lwm2mState, HandlerArgs) ->
 do_invoke_callback(Module, Fun, Args, Lwm2mState) ->
     case catch apply(Module, Fun, Args ++ [Lwm2mState]) of
         {'EXIT', Error} ->
-            error_logger:error_msg("~p", [Error]),
+            logger:error("~p", [Error]),
             {error, internal_server_error, Lwm2mState};
         Response ->
             Response
