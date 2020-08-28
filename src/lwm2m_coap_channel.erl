@@ -13,7 +13,7 @@
 -behaviour(gen_server).
 
 %% APIs
--export([start_link/2]).
+-export([start_link/3]).
 
 -export([ ping/1
         , send/2
@@ -35,7 +35,7 @@
 -define(VERSION, 1).
 -define(MAX_MESSAGE_ID, 65535). % 16-bit number
 
--record(state, {sock, chid, tokens, msgid_token, trans, nextmid, responder}).
+-record(state, {sock, chid, tokens, msgid_token, trans, nextmid, responder, options}).
 
 -include("coap.hrl").
 
@@ -44,14 +44,14 @@
 %%--------------------------------------------------------------------
 
 %% udp
-start_link(Socket = {udp, _SockPid, _Sock}, Peername) ->
-    {ok, proc_lib:spawn_link(?MODULE, init, [[Socket, Peername]])};
+start_link(Socket = {udp, _SockPid, _Sock}, Peername, Options) ->
+    {ok, proc_lib:spawn_link(?MODULE, init, [[Socket, Peername, Options]])};
 %% dtls
-start_link(esockd_transport, RawSock) ->
+start_link(esockd_transport, RawSock, Options) ->
     Socket = {esockd_transport, RawSock},
     case esockd_transport:peername(RawSock) of
         {ok, Peername} ->
-            {ok, proc_lib:spawn_link(?MODULE, init, [[Socket, Peername]])};
+            {ok, proc_lib:spawn_link(?MODULE, init, [[Socket, Peername, Options]])};
         R = {error, _} -> R
     end.
 
@@ -81,7 +81,7 @@ close(Pid) ->
 %% gen_server callbacks
 %%--------------------------------------------------------------------
 
-init([Socket, ChId]) ->
+init([Socket, ChId, Options]) ->
     % we want to get called upon termination
     process_flag(trap_exit, true),
     % start the responder sup FIXME:
@@ -90,7 +90,8 @@ init([Socket, ChId]) ->
     case esockd_wait(Socket) of
         {ok, NSocket} ->
             State = #state{sock=NSocket, chid=ChId, tokens=dict:new(),
-                           msgid_token=dict:new(), trans=dict:new(), nextmid=first_mid()},
+                           msgid_token=dict:new(), trans=dict:new(),
+                           nextmid=first_mid(), options = Options},
             gen_server:enter_loop(?MODULE, [], State);
         {error, Reason} ->
             _ = esockd_close(Socket),
@@ -156,11 +157,12 @@ terminate(Reason, #state{chid=ChId}) ->
 %%--------------------------------------------------------------------
 
 % incoming CON(0) or NON(1) request
-handle_datagram(BinMessage= <<?VERSION:2, 0:1, _:1, _TKL:4, 0:3, _CodeDetail:5, MsgId:16, _/bytes>>, State = #state{sock=Sock, chid=ChId, responder = undefined}) ->
+handle_datagram(BinMessage= <<?VERSION:2, 0:1, _:1, _TKL:4, 0:3, _CodeDetail:5, MsgId:16, _/bytes>>,
+                State = #state{sock=Sock, chid=ChId, responder = undefined, options = Options}) ->
     case catch lwm2m_coap_message_parser:decode(BinMessage) of
-        #coap_message{options=Options} ->
-            Uri = proplists:get_value(uri_path, Options, []),
-            case lwm2m_coap_responder:start_link(self(), Uri) of
+        #coap_message{options=MsgOptions} ->
+            Uri = proplists:get_value(uri_path, MsgOptions, []),
+            case lwm2m_coap_responder:start_link(self(), Uri, Options) of
                 {ok, Re} ->
                     TrId = {in, MsgId},
                     State2 = State#state{responder = Re},

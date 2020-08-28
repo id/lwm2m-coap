@@ -95,12 +95,12 @@ stop_dtls(Proto, ListenOn) ->
 start_udp_listener(Name, ListenOn, Options) ->
     SockOpts = esockd:parse_opt(Options),
     esockd:open_udp(Name, ListenOn, merge_default(udp_options, SockOpts),
-                    {lwm2m_coap_channel, start_link, []}).
+                    {lwm2m_coap_channel, start_link, [Options -- SockOpts]}).
 
 start_dtls_listener(Name, ListenOn, Options) ->
     SockOpts = esockd:parse_opt(Options),
     esockd:open_dtls(Name, ListenOn, merge_default(dtls_options, SockOpts),
-                     {lwm2m_coap_channel, start_link, []}).
+                     {lwm2m_coap_channel, start_link, [Options -- SockOpts]}).
 
 merge_default(Name, Options) ->
     case lists:keytake(Name, 1, Options) of

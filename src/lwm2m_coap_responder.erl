@@ -15,16 +15,28 @@
 
 -include("coap.hrl").
 
--export([start_link/2, stop/1, stop/2, notify/2]).
--export([init/1, handle_call/3, handle_cast/2, handle_info/2,
-    terminate/2, code_change/3]).
+-export([ start_link/3
+        , stop/1
+        , stop/2
+        , notify/2
+        ]).
+
+-export([ init/1
+        , handle_call/3
+        , handle_cast/2
+        , handle_info/2
+        , terminate/2
+        , code_change/3
+        ]).
+
+-export([options/0]).
 
 -record(state, {channel, prefix, module, args, insegs, last_response, observer, obseq, lwm2m_state, timer}).
 
 -define(EXCHANGE_LIFETIME, 247000).
 
-start_link(Channel, Uri) ->
-    gen_server:start_link(?MODULE, [Channel, Uri], []).
+start_link(Channel, Uri, Options) ->
+    gen_server:start_link(?MODULE, [Channel, Uri, Options], []).
 
 stop(Reason) ->
     stop(self(), Reason).
@@ -37,13 +49,21 @@ notify(Uri, Resource) ->
         List -> [gen_server:cast(Pid, Resource) || Pid <- List]
     end.
 
-init([Channel, Uri]) ->
+options() ->
+    case get(listener_options) of
+        undefined -> [];
+        Ls -> Ls
+    end.
+
+init([Channel, Uri, Options]) ->
     % the receiver will be determined based on the URI
     process_flag(trap_exit, true),
+    % put the listener options to prorcess directory
+    put(listener_options, Options),
     case lwm2m_coap_server_registry:get_handler(Uri) of
         {Prefix, Module, Args} ->
             {ok, #state{channel=Channel, prefix=Prefix, module=Module, args=Args,
-                insegs=orddict:new(), obseq=0}};
+                        insegs=orddict:new(), obseq=0}};
         undefined ->
             {stop, {resource_handler_not_found, Uri}}
     end.
