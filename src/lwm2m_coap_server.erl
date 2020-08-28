@@ -19,7 +19,8 @@
 -behaviour(supervisor).
 -export([init/1]).
 
--export([ start_registry/1
+-export([ start_registry/0
+        , start_registry/1
         , start_udp/1
         , start_udp/2
         , start_udp/3
@@ -52,6 +53,10 @@ init([]) ->
 %%--------------------------------------------------------------------
 %% APIs
 %%--------------------------------------------------------------------
+
+-spec(start_registry() -> supervisor:startchild_ret()).
+start_registry() ->
+    start_registry([]).
 
 -spec(start_registry(list()) -> supervisor:startchild_ret()).
 start_registry(ResourceHandlers) when is_list(ResourceHandlers) ->
