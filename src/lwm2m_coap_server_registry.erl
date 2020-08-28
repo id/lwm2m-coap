@@ -9,16 +9,32 @@
 
 % registry of server content handlers
 -module(lwm2m_coap_server_registry).
--export([add_handler/3, get_handler/1, get_links/0]).
 
 -behaviour(gen_server).
+
+-export([ add_handler/3
+        , remove_handler/3
+        , get_handler/1
+        , get_links/0
+        ]).
+
 -export([start_link/1]).
--export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2]).
+
+-export([ init/1
+        , handle_call/3
+        , handle_cast/2
+        , handle_info/2
+        , code_change/3
+        , terminate/2
+        ]).
 
 -record(state, {reg}).
 
 add_handler(Prefix, Module, Args) ->
     gen_server:call(?MODULE, {add_handler, Prefix, Module, Args}).
+
+remove_handler(Prefix, Module, Args) ->
+    gen_server:call(?MODULE, {remove_handler, Prefix, Module, Args}).
 
 get_handler(Uri) ->
     gen_server:call(?MODULE, {get_handler, Uri}).
@@ -39,12 +55,18 @@ init(ResourceHandlers) ->
     }}.
 
 handle_call({add_handler, Prefix, Module, Args}, _From, State=#state{reg=Reg}) ->
-    NewReg =    case lists:member({Prefix, Module, Args}, Reg) of
-                    true  -> Reg;
-                    false -> [{Prefix, Module, Args}|Reg]
-                end,
+    NewReg = case lists:member({Prefix, Module, Args}, Reg) of
+                true  -> Reg;
+                false -> [{Prefix, Module, Args}|Reg]
+             end,
     {reply, ok, State#state{reg=NewReg}};
 
+handle_call({remove_handler, Prefix, Module, Args}, _From, State=#state{reg=Reg}) ->
+    NReg = case lists:member({Prefix, Module, Args}, Reg) of
+               true  -> Reg;
+               false -> lists:delete({Prefix, Module, Args}, Reg)
+           end,
+    {reply, ok, State#state{reg=NReg}};
 
 handle_call({get_handler, Uri}, _From, State=#state{reg=Reg}) ->
     {reply, get_handler(Uri, Reg), State};
