@@ -1,0 +1,13 @@
+%% -*-: erlang -*-
+{"v1.1.1",
+   [
+     {"v1.1.0", [
+       {load_module, lwm2m_coap_transport, brutal_purge, soft_purge, []}
+     ]}
+   ],
+   [
+     {"v1.1.0", [
+       {load_module, lwm2m_coap_transport, brutal_purge, soft_purge, []}
+     ]}
+   ]
+}.
