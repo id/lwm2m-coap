@@ -66,7 +66,7 @@ idle(Msg={out, #coap_message{type=con}}, State=#state{channel=Channel, tid=TrId}
 % --- incoming NON
 
 in_non({in, BinMessage}, State) ->
-    case catch lwm2m_coap_message_parser:decode(BinMessage) of
+    _ = case catch lwm2m_coap_message_parser:decode(BinMessage) of
         #coap_message{method=Method} = Message when is_atom(Method) ->
             handle_request(Message, State);
         #coap_message{} = Message ->
@@ -91,7 +91,7 @@ out_non({out, Message}, State=#state{sendfun=SendFun, cid=ChId}) ->
 
 % we may get reset
 sent_non({in, BinMessage}, State)->
-    case catch lwm2m_coap_message_parser:decode(BinMessage) of
+    _ = case catch lwm2m_coap_message_parser:decode(BinMessage) of
         #coap_message{type=reset} = Message ->
             handle_error(Message, reset, State)
     end,
@@ -103,7 +103,7 @@ got_rst({in, _BinMessage}, State)->
 % --- incoming CON->ACK|RST
 
 in_con({in, BinMessage}, State) ->
-    case catch lwm2m_coap_message_parser:decode(BinMessage) of
+    _ = case catch lwm2m_coap_message_parser:decode(BinMessage) of
         #coap_message{method=undefined, id=MsgId} ->
             % provoked reset
             go_pack_sent(#coap_message{type=reset, id=MsgId}, State);
@@ -111,10 +111,10 @@ in_con({in, BinMessage}, State) ->
             handle_request(Message, State),
             go_await_aack(Message, State);
         #coap_message{type = con} = Message ->
-            handle_response(Message, State),
+            _ = handle_response(Message, State),
             go_con_await_aack(Message, State);
         #coap_message{} = Message ->
-            handle_response(Message, State),
+            _ = handle_response(Message, State),
             go_await_aack(Message, State);
         {error, Error} ->
             go_pack_sent(#coap_message{type=ack, method={error, bad_request},
@@ -175,7 +175,7 @@ out_con({out, Message}, State=#state{sendfun=SendFun, cid=ChId}) ->
 
 % peer ack
 await_pack({in, BinAck}, State) ->
-    case catch lwm2m_coap_message_parser:decode(BinAck) of
+    _ = case catch lwm2m_coap_message_parser:decode(BinAck) of
         #coap_message{type=ack, method=undefined} = EmptyAck ->
             handle_ack(EmptyAck, State);
         #coap_message{type=ack} = PiggyBackedAck ->
@@ -195,7 +195,7 @@ await_pack({timeout, await_pack}, State=#state{sendfun=SendFun, cid=ChId, msg=Me
     Timeout2 = Timeout*2,
     next_state(await_pack, State#state{retry_time=Timeout2, retry_count=Count+1}, Timeout2);
 await_pack({timeout, await_pack}, State=#state{tid={out, _MsgId}, msg=Message}) ->
-    handle_error(Message, timeout, State),
+    _ = handle_error(Message, timeout, State),
     next_state(aack_sent, State).
 
 aack_sent(_Msg, State) ->

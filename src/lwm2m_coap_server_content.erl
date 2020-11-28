@@ -16,6 +16,9 @@
 
 -include("coap.hrl").
 
+%% TODO: The callback implementation for lwm2m_coap_resource seem to be very much off the spec.
+-dialyzer(no_behaviours).
+
 coap_discover(_Prefix, _Args) ->
     [].
 
