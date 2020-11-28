@@ -77,7 +77,7 @@ start_udp(Proto, ListenOn) ->
 start_udp(Proto, ListenOn, Opts) ->
     start_udp_listener(Proto, ListenOn, Opts).
 
--spec(stop_udp(atom(), inet:port_number()) -> ok).
+-spec(stop_udp(atom(), inet:port_number()) -> ok | {error, term()}).
 stop_udp(Proto, ListenOn) ->
     esockd:close(Proto, ListenOn).
 
