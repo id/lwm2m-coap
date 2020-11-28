@@ -289,7 +289,7 @@ init_transport(TrId, Receiver, #state{sock=Sock, chid=ChId}) ->
 
 send_reset(Socket, ChId, MsgId, ErrorMsg) ->
     logger:error("<- reset, error: ~p", [ErrorMsg]),
-    esockd_send(Socket, ChId, lwm2m_coap_message_parser:encode(#coap_message{type=reset, id=MsgId})).
+    esockd_send_ok(Socket, ChId, lwm2m_coap_message_parser:encode(#coap_message{type=reset, id=MsgId})).
 
 first_mid() ->
     _ = rand:seed(exs1024),
@@ -310,6 +310,7 @@ update_state(State=#state{trans=Trans}, TrId, TrState) ->
 %%--------------------------------------------------------------------
 %% Wrapped codes for esockd udp/dtls
 
+-spec exit_on_sock_error(_) -> no_return().
 exit_on_sock_error(Reason) when Reason =:= einval;
                                 Reason =:= enotconn;
                                 Reason =:= closed ->
@@ -329,8 +330,13 @@ esockd_wait({esockd_transport, Sock}) ->
 
 sendfun(Socket) ->
     fun({Ip, Port}, Data) ->
-        esockd_send(Socket, {Ip, Port}, Data)
+        esockd_send_ok(Socket, {Ip, Port}, Data)
     end.
+
+
+esockd_send_ok(Socket, Dest, Data) ->
+    _ = esockd_send(Socket, Dest, Data),
+    ok.
 
 esockd_send({udp, _SockPid, Sock}, {Ip, Port}, Data) ->
     gen_udp:send(Sock, Ip, Port, Data);

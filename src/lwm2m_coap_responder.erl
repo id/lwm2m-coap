@@ -402,7 +402,8 @@ send_response(Ref, Response=#coap_message{options=Options},
     end.
 
 send_request(Channel, Ref, Request) ->
-    lwm2m_coap_channel:send_request(Channel, Ref, Request).
+    _ = lwm2m_coap_channel:send_request(Channel, Ref, Request),
+    ok.
 
 uri_query(#coap_message{options=Options}) ->
     proplists:get_value(uri_query, Options, []).
