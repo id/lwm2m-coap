@@ -227,11 +227,13 @@ handle_ack(_Message, #state{cid=ChId, channel=Channel, receiver={Sender, Ref}}) 
     Sender ! {coap_ack, ChId, Channel, Ref},
     ok.
 
-request_complete(Channel, Msg = #coap_message{options=Options}, _Ref) ->
+request_complete(_Channel, _Msg = #coap_message{options=Options}, _Ref) ->
     case proplists:get_value(observe, Options, []) of
         [] ->
             % Close the channel if it is not in an observation
-            Channel ! {request_complete, Msg};
+            %% Compatible with existing modules
+            % Channel ! {request_complete, Msg};
+            ok;
         _Else ->
             ok
     end.

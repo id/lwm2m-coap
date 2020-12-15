@@ -1,6 +1,6 @@
 {application, lwm2m_coap,
     [{description, "Constrained Application Protocol for LwM2M"},
-     {vsn, "0.3.0"},
+     {vsn, "git"},
      {modules, []},
      {registered, []},
      {mod, {lwm2m_coap_server, []}},
