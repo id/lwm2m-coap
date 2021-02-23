@@ -301,8 +301,8 @@ next_mid(MsgId) ->
         true -> 1 % or 0?
     end.
 
-update_state(State=#state{trans=Trans}, _TrId, undefined) ->
-    {noreply, State#state{trans=Trans}, hibernate};
+update_state(State=#state{trans = Trans0}, TrId, undefined) ->
+    {noreply, State#state{trans = dict:erase(TrId, Trans0)}, hibernate};
 update_state(State=#state{trans=Trans}, TrId, TrState) ->
     Trans2 = dict:store(TrId, TrState, Trans),
     {noreply, State#state{trans=Trans2}, hibernate}.
