@@ -1,6 +1,7 @@
 %% -*-: erlang -*-
-{"2.0.0",
+{"2.0.1",
    [
+    %% no appup for 2.0.0, only deps changes made
     {<<".*">>, []}
    ],
    [
