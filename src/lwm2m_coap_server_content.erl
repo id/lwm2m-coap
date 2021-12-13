@@ -35,10 +35,7 @@ coap_get(_ChId, _Prefix, Query, _Content, State) ->
     Links = coap_core_link:encode(filter(lwm2m_coap_server_registry:get_links(), Query)),
     {ok, #coap_content{etag = binary:part(crypto:hash(sha, Links), {0,4}),
                        content_format = <<"application/link-format">>,
-                       payload = list_to_binary(Links)}, State};
-
-coap_get(_ChId, _Prefix, _Query, _Content, State) ->
-    {error, not_found, State}.
+                       payload = list_to_binary(Links)}, State}.
 
 coap_post(_ChId, _Prefix, _Query, _Content, State) ->
     {error, method_not_allowed, State}.
