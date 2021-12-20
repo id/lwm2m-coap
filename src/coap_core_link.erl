@@ -49,9 +49,9 @@ encode_link_uri(absolute, UriList) -> "</"++join_uri(UriList)++">";
 encode_link_uri(rootless, UriList) -> "<"++join_uri(UriList)++">".
 
 join_uri([Seg]) ->
-    emqx_http_lib:uri_encode(binary_to_list(Seg));
+    uri_encode(binary_to_list(Seg));
 join_uri([Seg|Uri]) ->
-    emqx_http_lib:uri_encode(binary_to_list(Seg))++"/"++join_uri(Uri).
+    uri_encode(binary_to_list(Seg))++"/"++join_uri(Uri).
 
 encode_link_param({_Any, undefined}) -> undefined;
 encode_link_param({ct, Value}) -> ";ct=" ++ content_type_to_int(Value);
@@ -67,6 +67,54 @@ content_type_to_int(Value) when is_binary(Value) ->
 content_type_to_int(Value) when is_integer(Value) ->
     integer_to_list(Value).
 
+uri_encode(URI) when is_list(URI) ->
+    lists:append([do_uri_encode(Char) || Char <- URI]);
+uri_encode(URI) when is_binary(URI) ->
+    << <<(do_uri_encode_binary(Char))/binary>> || <<Char>> <= URI >>.
+
+do_uri_encode(Char) ->
+    case reserved(Char) of
+	    true ->
+	        [ $% | integer_to_hexlist(Char)];
+	    false ->
+	        [Char]
+    end.
+
+do_uri_encode_binary(Char) ->
+    case reserved(Char)  of
+        true ->
+            << $%, (integer_to_binary(Char, 16))/binary >>;
+        false ->
+            <<Char>>
+    end.
+
+reserved($;) -> true;
+reserved($:) -> true;
+reserved($@) -> true;
+reserved($&) -> true;
+reserved($=) -> true;
+reserved($+) -> true;
+reserved($,) -> true;
+reserved($/) -> true;
+reserved($?) -> true;
+reserved($#) -> true;
+reserved($[) -> true;
+reserved($]) -> true;
+reserved($<) -> true;
+reserved($>) -> true;
+reserved($\") -> true;
+reserved(${) -> true;
+reserved($}) -> true;
+reserved($|) -> true;
+reserved($\\) -> true;
+reserved($') -> true;
+reserved($^) -> true;
+reserved($%) -> true;
+reserved($\s) -> true;
+reserved(_) -> false.
+
+integer_to_hexlist(Int) ->
+    integer_to_list(Int, 16).
 
 -include_lib("eunit/include/eunit.hrl").
 
