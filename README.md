@@ -1,4 +1,4 @@
-# Generic Erlang CoAP Client/Server
+# Generic Erlang CoAP Client/Server [![Build status](https://github.com/emqx/lwm2m-coap/actions/workflows/main.yaml/badge.svg)](https://github.com/emqx/lwm2m-coap/actions/workflows/main.yaml)
 
 Pure Erlang implementation of the Constrained Application Protocol (CoAP),
 which aims to be conformant with:
@@ -23,13 +23,10 @@ functions may not be implemented. Please
 [add an Issue](https://github.com/gotthardp/gen_coap/issues/new)
 if you find a bug or miss a feature.
 
-
 ## Usage
 *gen_coap* enables you to integrate a CoAP server and/or CoAP client with
 your application. For demonstration purposes it also includes a simple CoAP
 client and server.
-
-[![Build Status](https://travis-ci.org/gotthardp/gen_coap.svg?branch=master)](https://travis-ci.org/gotthardp/gen_coap)
 
 ### Client
 Have a look at [sample_client.erl](examples/src/sample_client.erl). It implements a simple
